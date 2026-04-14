@@ -59,7 +59,7 @@ int main (int argc, char *argv[]) {
     hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
 
     if(!hHook) {
-        printf("Failed to install hook!\n");
+        printf("Failed to install hook\n");
         return EXIT_FAILURE;
     }
 
@@ -72,8 +72,10 @@ int main (int argc, char *argv[]) {
 	int w, h; // texture width & height
 	
 	// SDL initialization
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
-			return EXIT_FAILURE;
+	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        printf("Failed to initialize SDL\n");
+        return EXIT_FAILURE;
+    }
 	
 	// create the window and renderer
 	// note that the renderer is accelerated
@@ -101,6 +103,15 @@ int main (int argc, char *argv[]) {
         buttons[i].rect.w = ICON_SIZE;
         buttons[i].rect.h = ICON_SIZE;
     }
+
+    // open krc interface file
+    FILE *fh = fopen("C:/KRC/ROBOTER/UserFiles/krc-overlay", "r");
+    // FILE *fh = fopen("krc-overlay", "r");
+    if (!fh) {
+        printf("Failed to open KRC file\n");
+        // return EXIT_FAILURE;
+    }
+    char krc_var_status;
 	
 	// main loop
 	while(true) {
@@ -121,6 +132,12 @@ int main (int argc, char *argv[]) {
         //     TranslateMessage(&msg);
         //     DispatchMessage(&msg);
         // }
+
+        // krc interface file reading
+        if (fread(&krc_var_status, 1, 1, fh) == 1) {
+            buttons[0].state = krc_var_status - '0';
+            fseek(fh, 0, SEEK_SET);
+        }
 		
         // graphics rendering
 		SDL_RenderClear(renderer);
@@ -145,6 +162,8 @@ int main (int argc, char *argv[]) {
     
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(win);
+
+    fclose(fh);
 	
 	return EXIT_SUCCESS;
 }
