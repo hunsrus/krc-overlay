@@ -16,9 +16,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${SDL2_IMAGE_INCLUDE_DIRS}
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL2main SDL2 SDL2_image)
+# -mwindows es para ocultar la ventana de comandos
+target_link_libraries(${PROJECT_NAME} PRIVATE -mwindows SDL2main SDL2 SDL2_image)
+
+# crea el ejecutable en una carpeta /bin
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+# copia los recursos necesarios para el ejecutable a la misma carpeta /bin que lo contiene
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
