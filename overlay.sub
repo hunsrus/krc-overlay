@@ -1,0 +1,74 @@
+&ACCESS RVP
+&COMMENT USER specified PLC program
+DEF  overlay ( )
+   DECL GRIPPER_STATE_TYP LAST_GRIPPER_STATE
+   DECL STATE_T STAT
+   DECL MODUS_T MODE
+   DECL INT FH ;file handle
+   
+   DECL CHAR buffer[4]
+   DECL INT offset
+   
+   offset = 0
+   buffer[1] = 0
+   buffer[2] = 0
+   buffer[3] = 0
+   buffer[4] = 0
+   
+   FH = 0
+   MODE=#ASYNC
+   LAST_GRIPPER_STATE = GRIPPER_STATE
+   
+   ; abrir archivo
+   ;CWRITE($FCT_CALL, STAT, MODE, "krl_fopen", "krc-overlay", "w", FH)
+   
+   ; cerrar archivo
+   ;CWRITE($FCT_CALL, STAT, MODE, "krl_fclose", FH)
+   
+LOOP
+   IF GRIPPER_STATE <> LAST_GRIPPER_STATE THEN
+      SWITCH GRIPPER_STATE
+         CASE #CERRADO
+            offset = 0 ;el offset se incrementa con cada llamada a SWRITE. para reescribir el buffer hay que resetear su valor
+            SWRITE (buffer[], STAT, offset, "%d", GRIPPER_STATE)
+            ;MsgNotify("[INFO] Gripper state %1","OVERLAY", , buffer[])
+            
+            CWRITE($FCT_CALL, STAT, MODE, "krl_fopen", "krc-overlay", "w", FH)
+            ;CWRITE($FCT_CALL, STAT, MODE, "krl_fseek", FH, #SEEK_BEGIN)
+            CWRITE($FCT_CALL, STAT, MODE, "krl_fputc", FH, "1")
+            CWRITE($FCT_CALL, STAT, MODE, "krl_fclose", FH)
+         CASE #ABIERTO
+            offset = 0
+            SWRITE (buffer[], STAT, offset, "%d", GRIPPER_STATE)
+            ;MsgNotify("[INFO] Gripper state %1","OVERLAY", , buffer[])
+            
+            CWRITE($FCT_CALL, STAT, MODE, "krl_fopen", "krc-overlay", "w", FH)
+            ;CWRITE($FCT_CALL, STAT, MODE, "krl_fseek", FH, #SEEK_BEGIN)
+            CWRITE($FCT_CALL, STAT, MODE, "krl_fputc", FH, "0")
+            CWRITE($FCT_CALL, STAT, MODE, "krl_fclose", FH)
+         DEFAULT
+            MsgNotify("[WARNING] Estado indefinido","OVERLAY")
+            ; naranja
+      ENDSWITCH
+      LAST_GRIPPER_STATE = GRIPPER_STATE
+   ENDIF
+ENDLOOP
+END
+
+DEF overlayConnectEnum(VAR_STATE:IN)
+   DECL STATE_T STAT
+   DECL BOOL VAR_STATE
+   DECL CHAR buffer[4]
+   DECL INT offset
+   
+   offset = 0
+   buffer[1] = 0
+   buffer[2] = 0
+   buffer[3] = 0
+   buffer[4] = 0
+   
+   
+   offset = 0 ;el offset se incrementa con cada llamada a SWRITE. para reescribir el buffer hay que resetear su valor
+   SWRITE (buffer[], STAT, offset, "%d", VAR_STATE)
+   MsgNotify("[INFO] Gripper state %1","OVERLAY", , buffer[])
+END
